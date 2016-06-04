@@ -1,1 +1,1 @@
-# Atom autocomplete for Meteor packages.
+# Atom autocomplete for Meteor packages

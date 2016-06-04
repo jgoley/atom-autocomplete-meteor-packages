@@ -1,43 +1,48 @@
-fs = require 'fs'
+fs         = require 'fs'
+{ filter } = require 'fuzzaldrin'
 
 
 provider =
   selector: '.source.js, .source.coffee'
   disableForSelector: '.source.js .comment'
   inclusionPriority: 1
-  excludeLowerPriority: true
-  filterSuggestions: true
+  excludeLowerPriority: false
+  filterSuggestions: false
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     scope = scopeDescriptor.scopes[0]
     linePrefix = @getPrefix(editor, bufferPosition, scope)
-
     if linePrefix
-      @loadMeteorPackages(linePrefix, prefix, scope)
+      if prefix and prefix != '('
+        @filterPackages(prefix)
+      else
+        @loadMeteorPackages(prefix)
 
-  loadMeteorPackages: (linePrefix, prefix, scope) ->
-    new Promise (resolve) =>
+  loadMeteorPackages: (prefix) ->
+    new Promise (resolve) ->
       path = atom.project.getPaths()
       file = "#{path}/.meteor/versions"
       meteorPackages = fs.readFileSync(file).toString().split '\n'
-      closeLine = if @checkScope(scope, prefix) then ');' else ''
       suggestions = []
       meteorPackages.forEach (meteorPackage) ->
-        packageName = meteorPackage.replace /@.*/, ''
+        meteorPackage =
+          version: meteorPackage.replace /^(.*)@/, ''
+          name: meteorPackage.replace /@.*/, ''
         suggestions.push
-          text: "'meteor/#{packageName}'#{closeLine}"
-          displayText: packageName
+          text: "'meteor/#{meteorPackage.name}'"
+          displayText: meteorPackage.name
+          type: 'require'
+          description: "Version: #{meteorPackage.version}"
       resolve(suggestions)
 
+  filterPackages: (prefix) ->
+    @loadMeteorPackages(prefix)
+      .then (packages) ->
+        filter packages, prefix, key: 'displayText'
+
   getPrefix: (editor, bufferPosition, scope) ->
-    if scope.match /coffee$/
-      regex = /require|from/
-    else
-      regex = /require\(|from/
+    regex = /require |require\(|from /
     line = editor.getTextInRange([[bufferPosition.row, 0], bufferPosition])
     line.match(regex)?[0] or ''
-
-  checkScope: (scope, prefix) ->
-    scope.match(/js$/) or prefix == '('
 
 module.exports = provider
