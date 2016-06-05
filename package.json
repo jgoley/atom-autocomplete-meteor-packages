@@ -5,7 +5,9 @@
   "description": "Atom autocomplete for Meteor packages.",
   "keywords": [
     "meteor",
-    "package"
+    "package",
+    "require",
+    "import"
   ],
   "repository": "https://github.com/jgoley/atom-autocomplete-meteor-packages",
   "license": "MIT",
