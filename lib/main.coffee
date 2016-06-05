@@ -1,7 +1,6 @@
 fs       = require 'fs'
 provider = require './provider'
 
-
 module.exports =
   config:
     sourceFile:
@@ -17,3 +16,6 @@ module.exports =
     path = atom.project.getPaths()[0]
     if fs.existsSync "#{path}/.meteor"
       @provide = -> provider
+
+  deactivate: ->
+    @provider.dispose()

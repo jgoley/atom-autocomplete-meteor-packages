@@ -1,7 +1,6 @@
 fs         = require 'fs'
 { filter } = require 'fuzzaldrin'
 
-
 provider =
   selector: '.source.js, .source.coffee'
   disableForSelector: '.source.js .comment'
@@ -9,11 +8,13 @@ provider =
   excludeLowerPriority: false
   filterSuggestions: false
 
+  cachedSuggestions: null
+
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     scope = scopeDescriptor.scopes[0]
     linePrefix = @getPrefix editor, bufferPosition, scope
     if linePrefix
-      if prefix and prefix != '('
+      if prefix.trim() and prefix != '('
         @filterPackages prefix
       else
         @loadMeteorPackages prefix
@@ -25,9 +26,11 @@ provider =
     new Promise (resolve) =>
       sourceFile = @getSourceFile()
       projectPath = atom.project.getPaths()[0]
-      file = "#{projectPath}/.meteor/#{sourceFile}"
-      meteorPackages = @parseSourceFile fs.readFileSync(file)
-      resolve @buildSuggestions(meteorPackages)
+      filePath = "#{projectPath}/.meteor/#{sourceFile}"
+      meteorPackages = @parseSourceFile fs.readFileSync(filePath)
+      suggestions = @buildSuggestions(meteorPackages)
+      @cachedSuggestions = suggestions
+      resolve suggestions
 
   buildSuggestions: (meteorPackages) ->
     suggestions = []
@@ -48,20 +51,20 @@ provider =
   parseSourceFile: (file)->
     file
       .toString()
-       # Remove single line comments and whitespace
+       # Remove single line comments, whitespace and empty lines
       .replace(/#.*/g, '')
-       # Remove emplty lines
       .replace(/^(?=\n)$|^\s*|\s*$|\n\n+/gm, '')
       .split '\n'
 
   filterPackages: (prefix) ->
-    @loadMeteorPackages(prefix)
-      .then (packages) ->
-        filter packages, prefix, key: 'displayText'
+    filter @cachedSuggestions, prefix, key: 'displayText'
 
   getPrefix: (editor, bufferPosition, scope) ->
     regex = /require |require\(|from /
     line = editor.getTextInRange([[bufferPosition.row, 0], bufferPosition])
     line.match(regex)?[0] or ''
+
+  dispose: ->
+    @cachedSuggestions = null
 
 module.exports = provider
