@@ -13,7 +13,6 @@ provider =
     scope = scopeDescriptor.scopes[0]
     linePrefix = @getPrefix editor, bufferPosition, scope
     if linePrefix
-      console.log prefix
       if prefix and prefix != '('
         @filterPackages prefix
       else
