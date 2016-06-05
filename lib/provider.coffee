@@ -11,12 +11,12 @@ provider =
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     scope = scopeDescriptor.scopes[0]
-    linePrefix = @getPrefix(editor, bufferPosition, scope)
+    linePrefix = @getPrefix editor, bufferPosition, scope
     if linePrefix
       if prefix and prefix != '('
-        @filterPackages(prefix)
+        @filterPackages prefix
       else
-        @loadMeteorPackages(prefix)
+        @loadMeteorPackages prefix
 
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) ->
@@ -25,14 +25,14 @@ provider =
       meteorPackages = fs.readFileSync(file).toString().split '\n'
       suggestions = []
       meteorPackages.forEach (meteorPackage) ->
-        meteorPackage =
-          version: meteorPackage.replace /^(.*)@/, ''
-          name: meteorPackage.replace /@.*/, ''
+        meteorPackage = meteorPackage.split '@'
+        name = meteorPackage[0]
+        version = meteorPackage[1]
         suggestions.push
-          text: "'meteor/#{meteorPackage.name}'"
-          displayText: meteorPackage.name
-          type: 'require'
-          description: "Version: #{meteorPackage.version}"
+          text: "'meteor/#{name}'"
+          displayText: name
+          description: "Version: #{version}"
+          iconHTML: '<i class="icon-telescope"></i>'
       resolve(suggestions)
 
   filterPackages: (prefix) ->
