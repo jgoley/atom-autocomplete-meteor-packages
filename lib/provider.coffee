@@ -30,7 +30,10 @@ provider =
       meteorPackages =
         fs.readFileSync(file)
           .toString()
-          .replace(/^(?=\n)$|^\s*|\s*$|\n\n+/gm,"")
+           # Remove single line comments and whitespace
+          .replace(/#.*| +?|/g, '')
+           # Remove emplty lines
+          .replace(/^(?=\n)$|\n\n+/gm,'')
           .split '\n'
       meteorPackages.forEach (meteorPackage) ->
         if sourceFile is 'versions'
