@@ -26,8 +26,12 @@ provider =
       sourceFile = @getSourceFile()
       projectPath = atom.project.getPaths()[0]
       file = "#{projectPath}/.meteor/#{sourceFile}"
-      meteorPackages = fs.readFileSync(file).toString().split '\n'
       suggestions = []
+      meteorPackages =
+        fs.readFileSync(file)
+          .toString()
+          .replace(/^(?=\n)$|^\s*|\s*$|\n\n+/gm,"")
+          .split '\n'
       meteorPackages.forEach (meteorPackage) ->
         if sourceFile is 'versions'
           meteorPackage = meteorPackage.split '@'
