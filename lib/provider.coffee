@@ -9,46 +9,51 @@ provider =
   excludeLowerPriority: false
   filterSuggestions: false
 
-  getSourceFile: ->
-    atom.config.get 'autocomplete-meteor-packages.sourceFile'
-
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     scope = scopeDescriptor.scopes[0]
     linePrefix = @getPrefix editor, bufferPosition, scope
     if linePrefix
+      console.log prefix
       if prefix and prefix != '('
         @filterPackages prefix
       else
         @loadMeteorPackages prefix
+
+  getSourceFile: ->
+    atom.config.get 'autocomplete-meteor-packages.sourceFile'
 
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) =>
       sourceFile = @getSourceFile()
       projectPath = atom.project.getPaths()[0]
       file = "#{projectPath}/.meteor/#{sourceFile}"
-      suggestions = []
-      meteorPackages =
-        fs.readFileSync(file)
-          .toString()
-           # Remove single line comments and whitespace
-          .replace(/#.*| +?|/g, '')
-           # Remove emplty lines
-          .replace(/^(?=\n)$|\n\n+/gm,'')
-          .split '\n'
-      meteorPackages.forEach (meteorPackage) ->
-        if sourceFile is 'versions'
-          meteorPackage = meteorPackage.split '@'
-          name = meteorPackage[0]
-          version = meteorPackage[1]
-        else
-          name = meteorPackage
-        suggestions.push
-          text: "'meteor/#{name}'"
-          displayText: name
-          description: if version then "Version: #{version}"
-          iconHTML: '<i class="icon-telescope"></i>'
-        suggestions
-      resolve(suggestions)
+      meteorPackages = @parseSourceFile fs.readFileSync(file)
+      resolve @buildSuggestions(meteorPackages)
+
+  buildSuggestions: (meteorPackages) ->
+    suggestions = []
+    meteorPackages.forEach (meteorPackage) =>
+      if @getSourceFile() is 'versions'
+        meteorPackage = meteorPackage.split '@'
+        name = meteorPackage[0]
+        version = meteorPackage[1]
+      else
+        name = meteorPackage
+      suggestions.push
+        text: "'meteor/#{name}'"
+        displayText: name
+        description: if version then "Version: #{version}"
+        iconHTML: '<i class="icon-telescope"></i>'
+    suggestions
+
+  parseSourceFile: (file)->
+    file
+      .toString()
+       # Remove single line comments and whitespace
+      .replace(/#.*/g, '')
+       # Remove emplty lines
+      .replace(/^(?=\n)$|^\s*|\s*$|\n\n+/gm, '')
+      .split '\n'
 
   filterPackages: (prefix) ->
     @loadMeteorPackages(prefix)
