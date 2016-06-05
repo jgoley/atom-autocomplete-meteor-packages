@@ -41,11 +41,15 @@ provider =
         version = meteorPackage[1]
       else
         name = meteorPackage
+      userAndName = name.split ':'
+      unless userAndName[1] then userAndName.unshift 'meteor'
+      link = "https://atmospherejs.com/#{userAndName[0]}/#{userAndName[1]}"
       suggestions.push
         text: "'meteor/#{name}'"
         displayText: name
-        description: if version then "Version: #{version}"
         iconHTML: '<i class="icon-telescope"></i>'
+        description: if version then "Version: #{version}"
+        descriptionMoreURL: link
     suggestions
 
   parseSourceFile: (file)->
