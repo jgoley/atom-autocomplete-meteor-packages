@@ -9,6 +9,9 @@ provider =
   excludeLowerPriority: false
   filterSuggestions: false
 
+  getSourceFile: ->
+    atom.config.get 'autocomplete-meteor-packages.sourceFile'
+
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     scope = scopeDescriptor.scopes[0]
     linePrefix = @getPrefix editor, bufferPosition, scope
@@ -19,20 +22,25 @@ provider =
         @loadMeteorPackages prefix
 
   loadMeteorPackages: (prefix) ->
-    new Promise (resolve) ->
-      path = atom.project.getPaths()
-      file = "#{path}/.meteor/versions"
+    new Promise (resolve) =>
+      sourceFile = @getSourceFile()
+      projectPath = atom.project.getPaths()[0]
+      file = "#{projectPath}/.meteor/#{sourceFile}"
       meteorPackages = fs.readFileSync(file).toString().split '\n'
       suggestions = []
       meteorPackages.forEach (meteorPackage) ->
-        meteorPackage = meteorPackage.split '@'
-        name = meteorPackage[0]
-        version = meteorPackage[1]
+        if sourceFile is 'versions'
+          meteorPackage = meteorPackage.split '@'
+          name = meteorPackage[0]
+          version = meteorPackage[1]
+        else
+          name = meteorPackage
         suggestions.push
           text: "'meteor/#{name}'"
           displayText: name
-          description: "Version: #{version}"
+          description: if version then "Version: #{version}"
           iconHTML: '<i class="icon-telescope"></i>'
+        suggestions
       resolve(suggestions)
 
   filterPackages: (prefix) ->
