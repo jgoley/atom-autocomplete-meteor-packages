@@ -1,7 +1,7 @@
 {
   "name": "autocomplete-meteor-packages",
   "main": "./lib/main",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Atom autocomplete for Meteor packages.",
   "keywords": [
     "meteor",
