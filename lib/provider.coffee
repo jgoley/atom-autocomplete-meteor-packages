@@ -28,7 +28,7 @@ provider =
       projectPath = atom.project.getPaths()[0]
       filePath = "#{projectPath}/.meteor/#{sourceFile}"
       meteorPackages = @parseSourceFile fs.readFileSync(filePath)
-      suggestions = @buildSuggestions(meteorPackages)
+      suggestions = @buildSuggestions meteorPackages
       @cachedSuggestions = suggestions
       resolve suggestions
 
@@ -61,7 +61,10 @@ provider =
       .split '\n'
 
   filterPackages: (prefix) ->
-    filter @cachedSuggestions, prefix, key: 'displayText'
+    filteredSuggestions = filter @cachedSuggestions, prefix, key: 'displayText'
+    filteredSuggestions.map (suggestion) ->
+      suggestion.replacementPrefix = prefix
+      suggestion
 
   getPrefix: (editor, bufferPosition, scope) ->
     regex = /require |require\(|from /
