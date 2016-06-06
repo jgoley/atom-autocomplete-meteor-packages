@@ -5,16 +5,15 @@ provider =
   selector: '.source.js, .source.coffee'
   disableForSelector: '.source.js .comment'
   inclusionPriority: 1
-  excludeLowerPriority: false
   filterSuggestions: false
 
   cachedSuggestions: null
+  currentFileName: null
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
-    scope = scopeDescriptor.scopes[0]
-    linePrefix = @getPrefix editor, bufferPosition, scope
-    if linePrefix
-      if prefix.trim() and prefix != '('
+    @currentFileName = editor.getFileName()
+    if @getPrefix editor, bufferPosition, scopeDescriptor.scopes[0]
+      if @checkPrefix prefix
         @filterPackages prefix
       else
         @loadMeteorPackages prefix
@@ -24,9 +23,8 @@ provider =
 
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) =>
-      sourceFile = @getSourceFile()
       projectPath = atom.project.getPaths()[0]
-      filePath = "#{projectPath}/.meteor/#{sourceFile}"
+      filePath = "#{projectPath}/.meteor/#{@getSourceFile()}"
       meteorPackages = @parseSourceFile fs.readFileSync(filePath)
       suggestions = @buildSuggestions meteorPackages
       @cachedSuggestions = suggestions
@@ -45,7 +43,7 @@ provider =
       unless userAndName[1] then userAndName.unshift 'meteor'
       link = "https://atmospherejs.com/#{userAndName[0]}/#{userAndName[1]}"
       suggestions.push
-        text: "'meteor/#{name}'"
+        text: if @isPackageJS() then "'#{name}'" else "'meteor/#{name}'"
         displayText: name
         iconHTML: '<i class="icon-telescope"></i>'
         description: if version then "Version: #{version}"
@@ -66,12 +64,20 @@ provider =
       suggestion.replacementPrefix = prefix
       suggestion
 
+  isPackageJS: ->
+    @currentFileName is 'package.js'
+
   getPrefix: (editor, bufferPosition, scope) ->
-    regex = /require |require\(|from /
+    regex =
+      if @isPackageJS() then /use\(/g else /require |require\(|from /
     line = editor.getTextInRange([[bufferPosition.row, 0], bufferPosition])
     line.match(regex)?[0] or ''
 
+  checkPrefix: (prefix) ->
+    prefix.trim() and not prefix.match /\(|\[/
+
   dispose: ->
     @cachedSuggestions = null
+    @currentFileName = null
 
 module.exports = provider
