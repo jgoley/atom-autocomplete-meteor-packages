@@ -8,3 +8,6 @@ Reads `versions` or `packages` file in Meteor projects and offers autocomplete s
 The default source file is `versions` (includes all user-added and core Meteor packages) but if you want to only source the user-added packages, change the 'Source file for package names' setting to `packages`.
 
 Meteor is pretty cool, you should [check it out](http://meteor.com/).
+
+### TODO
+Implement autocomplete when importing stylus/less/sass files from packages (e.g `@import {name:package}/file`)
