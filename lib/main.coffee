@@ -1,21 +1,18 @@
-fs       = require 'fs'
-provider = require './provider'
+config                 = require './config'
+MeteorPackagesProvider = require './provider'
+getMeteorPath          = require './path'
 
 module.exports =
-  config:
-    sourceFile:
-      title: 'Source file for package names'
-      type: 'string'
-      default: 'versions'
-      enum: [
-        'versions'
-        'packages'
-      ]
+  config: config
 
   activate: ->
-    path = atom.project.getPaths()[0]
-    if fs.existsSync "#{path}/.meteor"
-      @provide = -> provider
+    getMeteorPath
+      .then (path) =>
+        unless path
+          @deactivate()
+
+  provide: ->
+    new MeteorPackagesProvider()
 
   deactivate: ->
-    @provider.dispose()
+    delete @provide

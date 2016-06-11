@@ -1,14 +1,20 @@
 fs         = require 'fs'
 { filter } = require 'fuzzaldrin'
+getPath    = require './path'
 
-provider =
-  selector: '.source.js, .source.coffee'
+class MeteorPackagesProvider
+  selector          : '.source.js, .source.coffee'
   disableForSelector: '.source.js .comment'
-  inclusionPriority: 1
-  filterSuggestions: false
+  inclusionPriority : 1
+  filterSuggestions : false
 
-  cachedSuggestions: null
-  currentFileName: null
+  cachedSuggestions : null
+  currentFileName   : null
+  meteorPath        : null
+
+  constructor: ->
+    getPath.then (meteorPath) =>
+      @meteorPath = meteorPath
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
     @currentFileName = editor.getFileName()
@@ -23,9 +29,8 @@ provider =
 
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) =>
-      projectPath = atom.project.getPaths()[0]
-      filePath = "#{projectPath}/.meteor/#{@getSourceFile()}"
-      meteorPackages = @parseSourceFile fs.readFileSync(filePath)
+      meteorPackagePath = "#{@meteorPath}/#{@getSourceFile()}"
+      meteorPackages = @parseSourceFile fs.readFileSync meteorPackagePath
       suggestions = @buildSuggestions meteorPackages
       @cachedSuggestions = suggestions
       resolve suggestions
@@ -79,5 +84,6 @@ provider =
   dispose: ->
     @cachedSuggestions = null
     @currentFileName = null
+    @getSuggestions = null
 
-module.exports = provider
+module.exports = MeteorPackagesProvider

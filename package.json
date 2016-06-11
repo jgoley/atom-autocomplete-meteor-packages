@@ -15,6 +15,7 @@
     "atom": ">=1.0.0 <2.0.0"
   },
   "dependencies": {
+    "find": "^0.2.6",
     "fuzzaldrin": "^2.1.0"
   },
   "providedServices": {
