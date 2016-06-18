@@ -1,6 +1,6 @@
-fs         = require 'fs'
-{ filter } = require 'fuzzaldrin'
-getPath    = require './path'
+fs            = require 'fs'
+{ filter }    = require 'fuzzaldrin'
+path          = require './path'
 
 class MeteorPackagesProvider
   selector          : '.source.js, .source.coffee'
@@ -13,10 +13,12 @@ class MeteorPackagesProvider
   meteorPath        : null
 
   constructor: ->
-    getPath.then (meteorPath) =>
-      @meteorPath = meteorPath
+    path.getMeteorPath()
+      .then (meteorPath) =>
+        @meteorPath = meteorPath
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
+    unless @meteorPath then return
     @currentFileName = editor.getFileName()
     if @getPrefix editor, bufferPosition, scopeDescriptor.scopes[0]
       if @checkPrefix prefix
@@ -83,7 +85,9 @@ class MeteorPackagesProvider
 
   dispose: ->
     @cachedSuggestions = null
-    @currentFileName = null
-    @getSuggestions = null
+    @currentFileName   = null
+    @getSuggestions    = null
+    @selector          = null
+    @meteorPath        = null
 
 module.exports = MeteorPackagesProvider

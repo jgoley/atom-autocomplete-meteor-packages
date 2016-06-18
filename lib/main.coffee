@@ -1,18 +1,12 @@
 config                 = require './config'
 MeteorPackagesProvider = require './provider'
-getMeteorPath          = require './path'
 
 module.exports =
   config: config
 
-  activate: ->
-    getMeteorPath
-      .then (path) =>
-        unless path
-          @deactivate()
-
   provide: ->
-    new MeteorPackagesProvider()
+    provider = new MeteorPackagesProvider()
+    provider
 
   deactivate: ->
-    delete @provide
+    @provide = null

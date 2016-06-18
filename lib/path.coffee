@@ -1,24 +1,29 @@
-getPath = new Promise (resolve) ->
-  packageName      = 'autocomplete-meteor-packages'
-  projectRoot      = atom.project.getPaths()[0]
-  meteorDirSetting = 'search' # Use settings
-
-  switch meteorDirSetting
-    when 'search'
-      find = require 'find'
-      find.dir /\.meteor$/, projectRoot, (dirs) ->
-        meteorPath = if dirs[0] then dirs[0]
+getMeteorPath = () ->
+  { meteorDirLocation, customMeteorDirLocation } = getPathSettings()
+  new Promise (resolve) ->
+    projectRootDir = atom.project.getPaths()[0]
+    if customMeteorDirLocation then meteorDirLocation = 'custom'
+    switch meteorDirLocation
+      when 'search'
+        find = require 'find'
+        find.dir /\.meteor$/, projectRootDir, (dirs) ->
+          meteorPath = if dirs[0] then dirs[0]
+          resolve meteorPath
+      when 'custom'
+        meteorPath = "#{projectRootDir}#{customMeteorDirLocation}.meteor"
         resolve meteorPath
-    when 'custom'
-      customDirLocation =
-        atom.config.get "#{packageName}.customDirLocation"
-      meteorPath = "#{projectRoot}/#{customDirLocation}"
-      resolve meteorPath
-    when 'root'
-      rootLocation = "#{projectRoot}/.meteor"
-      fs = require 'fs'
-      if fs.existsSync rootLocation
-        meteorPath = rootLocation
-      resolve meteorPath
+      when 'projectRoot'
+        rootLocation = "#{projectRootDir}/.meteor"
+        fs = require 'fs'
+        if fs.existsSync rootLocation
+          meteorPath = rootLocation
+        resolve meteorPath
 
-module.exports = getPath
+getPathSettings = () ->
+  packageName = 'autocomplete-meteor-packages'
+  meteorDirLocation      : atom.config.get "#{packageName}.meteorDirLocation"
+  customMeteorDirLocation: atom.config.get "#{packageName}.customMeteorDirLocation"
+
+module.exports =
+  getMeteorPath  : getMeteorPath
+  getPathSettings: getPathSettings
