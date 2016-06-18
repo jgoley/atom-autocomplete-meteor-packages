@@ -13,21 +13,26 @@ class MeteorPackagesProvider
   meteorPath        : null
 
   constructor: ->
+    @findMeteor()
+
+  findMeteor: ->
     path.getMeteorPath()
       .then (meteorPath) =>
         @meteorPath = meteorPath
 
+  getSourceFile: ->
+    atom.config.get 'autocomplete-meteor-packages.sourceFile'
+
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
+     # Do not supply suggestions unless meteor folder exists
     unless @meteorPath then return
+
     @currentFileName = editor.getFileName()
     if @getPrefix editor, bufferPosition, scopeDescriptor.scopes[0]
       if @checkPrefix prefix
         @filterPackages prefix
       else
         @loadMeteorPackages prefix
-
-  getSourceFile: ->
-    atom.config.get 'autocomplete-meteor-packages.sourceFile'
 
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) =>

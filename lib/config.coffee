@@ -1,5 +1,3 @@
-projectRootDir   = atom.project.getPaths()[0]
-
 config =
   sourceFile:
     description: 'Source file for package names'
@@ -12,8 +10,8 @@ config =
     order: 1
 
   meteorDirLocation:
-    description: 'Location of `.meteor` folder.
-                  If search is selected, a recursive search for a `.meteor`
+    description: 'Location of `.meteor` directory in current project.
+                  If *search* is selected, a recursive search for a `.meteor`
                   directory occurs when the package is loaded'
     type: 'string'
     default: 'projectRoot'
@@ -24,7 +22,7 @@ config =
     order: 2
 
   customMeteorDirLocation:
-    description: 'Custom `.meteor` folder location.
+    description: 'Custom `.meteor` directory location in current project.
                   This will override "Meteor Dir Location" settings.<br/>
                   (relative to your project\'s root e.g. `/app/`)<br/>
                   **No need to add `.meteor`**'
