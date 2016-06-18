@@ -4,7 +4,7 @@ path          = require './path'
 
 class MeteorPackagesProvider
   selector          : '.source.js, .source.coffee'
-  disableForSelector: '.source.js .comment'
+  disableForSelector: '.source.js .comment, .source.coffee .comment'
   inclusionPriority : 1
   filterSuggestions : false
 

@@ -1,5 +1,6 @@
 config                 = require './config'
 MeteorPackagesProvider = require './provider'
+
 packageName = 'autocomplete-meteor-packages'
 configProps = [
   "#{packageName}.customMeteorDirLocation"
