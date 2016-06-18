@@ -1,21 +1,30 @@
-fs       = require 'fs'
-provider = require './provider'
+config                 = require './config'
+MeteorPackagesProvider = require './provider'
+packageName = 'autocomplete-meteor-packages'
+configProps = [
+  "#{packageName}.customMeteorDirLocation"
+  "#{packageName}.meteorDirLocation"
+]
 
 module.exports =
-  config:
-    sourceFile:
-      title: 'Source file for package names'
-      type: 'string'
-      default: 'versions'
-      enum: [
-        'versions'
-        'packages'
-      ]
+  config: config
+
+  disposables: []
+
+  registerEvents: ->
+    for prop in configProps
+      @disposables.push atom.config.observe prop, (value) =>
+        @provider?.findMeteor()
 
   activate: ->
-    path = atom.project.getPaths()[0]
-    if fs.existsSync "#{path}/.meteor"
-      @provide = -> provider
+    @registerEvents()
+
+  provide: ->
+    @provider = new MeteorPackagesProvider()
+    @provider
 
   deactivate: ->
-    @provider.dispose()
+    for disposable in @disposables
+      disposable.dispose()
+    @provide = null
+    @provider = null

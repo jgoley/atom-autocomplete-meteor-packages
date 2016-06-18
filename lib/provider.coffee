@@ -1,16 +1,32 @@
-fs         = require 'fs'
-{ filter } = require 'fuzzaldrin'
+fs            = require 'fs'
+{ filter }    = require 'fuzzaldrin'
+path          = require './path'
 
-provider =
-  selector: '.source.js, .source.coffee'
+class MeteorPackagesProvider
+  selector          : '.source.js, .source.coffee'
   disableForSelector: '.source.js .comment'
-  inclusionPriority: 1
-  filterSuggestions: false
+  inclusionPriority : 1
+  filterSuggestions : false
 
-  cachedSuggestions: null
-  currentFileName: null
+  cachedSuggestions : null
+  currentFileName   : null
+  meteorPath        : null
+
+  constructor: ->
+    @findMeteor()
+
+  findMeteor: ->
+    path.getMeteorPath()
+      .then (meteorPath) =>
+        @meteorPath = meteorPath
+
+  getSourceFile: ->
+    atom.config.get 'autocomplete-meteor-packages.sourceFile'
 
   getSuggestions: ({editor, bufferPosition, scopeDescriptor, prefix}) ->
+     # Do not supply suggestions unless meteor folder exists
+    unless @meteorPath then return
+
     @currentFileName = editor.getFileName()
     if @getPrefix editor, bufferPosition, scopeDescriptor.scopes[0]
       if @checkPrefix prefix
@@ -18,14 +34,10 @@ provider =
       else
         @loadMeteorPackages prefix
 
-  getSourceFile: ->
-    atom.config.get 'autocomplete-meteor-packages.sourceFile'
-
   loadMeteorPackages: (prefix) ->
     new Promise (resolve) =>
-      projectPath = atom.project.getPaths()[0]
-      filePath = "#{projectPath}/.meteor/#{@getSourceFile()}"
-      meteorPackages = @parseSourceFile fs.readFileSync(filePath)
+      meteorPackagePath = "#{@meteorPath}/#{@getSourceFile()}"
+      meteorPackages = @parseSourceFile fs.readFileSync meteorPackagePath
       suggestions = @buildSuggestions meteorPackages
       @cachedSuggestions = suggestions
       resolve suggestions
@@ -78,6 +90,9 @@ provider =
 
   dispose: ->
     @cachedSuggestions = null
-    @currentFileName = null
+    @currentFileName   = null
+    @getSuggestions    = null
+    @selector          = null
+    @meteorPath        = null
 
-module.exports = provider
+module.exports = MeteorPackagesProvider
